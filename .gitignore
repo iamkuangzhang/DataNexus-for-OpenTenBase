@@ -1,0 +1,41 @@
+# Build artifacts
+*.o
+*.so
+*.a
+*.log
+*.out
+*.exe
+
+# Test outputs
+/tests/reports/*.log
+/tests/reports/*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Archives and large binary materials
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.pdf
+*.mp4
+*.mov
+*.avi
+
+# Local environment
+.env
+.env.*
