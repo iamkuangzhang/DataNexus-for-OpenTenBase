@@ -1,107 +1,80 @@
 # DataNexus for OpenTenBase
 
-## OpenTenBase 多模态融合枢纽
+OpenTenBase 多模态能力扩展插件集合。
 
 <p align="center">
-  <img src="https://www.opentenbase.org/images/logo.png" alt="OpenTenBase Logo" width="180"/>
+  <img src="https://www.opentenbase.org/images/logo.png" alt="OpenTenBase Logo" width="160"/>
 </p>
-
-
 
 <p align="center">
-  <strong>「数据融合枢纽，模态无限可能」</strong>
+  <strong>Bring time-series, graph, fulltext, routing, scheduling, analytics, health diagnostics, and snapshot workflows into OpenTenBase.</strong>
 </p>
-
-
 
 <p align="center">
   <a href="#-快速开始">快速开始</a> •
-  <a href="#-基本使用">基本使用</a> •
   <a href="#-插件一览">插件一览</a> •
+  <a href="#-基本使用">基本使用</a> •
   <a href="#-性能指标">性能指标</a> •
-  <a href="#-常见问题">常见问题</a>
+  <a href="#-相关文档">相关文档</a>
 </p>
-
-
 
 ---
 
-## 📖 项目简介
+## 📖 项目概览
 
-本项目是 **OpenTenBase 开源创新大赛（赛题二：多模态插件增强）** 的参赛作品。
+DataNexus for OpenTenBase is a plugin suite that extends OpenTenBase with a set of multimodal data capabilities and compatibility layers inspired by common PostgreSQL ecosystem workflows.
 
-我们将 PostgreSQL 生态中的多个优秀插件适配到 OpenTenBase 分布式架构，并开发了 3 个完全原创的插件，实现了 **9 种数据模态**的统一 SQL 融合分析能力。
+这个仓库聚焦的是“数据库侧能力扩展”，不是一个上层业务系统。目标是让 OpenTenBase 在单一数据库环境中更统一地承接多种数据类型和分析任务。
 
-### 核心成果
+### 你能在这里找到什么
 
-| 指标     | 数值             | 说明                                           |
-| -------- | ---------------- | ---------------------------------------------- |
-| 适配插件 | **5 个**         | TimescaleDB、AGE、Fulltext、Routing、Scheduler |
-| 原创插件 | **3 个**         | otb_analytics、otb_health、otb_snapshot        |
-| 功能对象 | **292 个**       | 函数213 + 聚合29 + 视图20 + 类型3 + 表27       |
-| 数据模态 | **9 种**         | 关系/时序/图/地理/向量/全文/路网/JSON/调度     |
-| 测试用例 | **160 项**       | 功能测试 110 项 + 性能测试 50 项               |
-| 性能提升 | **最高 1284 倍** | GIN 索引全文搜索：1926ms → 1.5ms               |
+- 8 个可部署插件模块
+- 5 个生态兼容方向：TimescaleDB、Apache AGE、Fulltext、Routing、Scheduler
+- 3 个原创能力模块：`otb_analytics`、`otb_health`、`otb_snapshot`
+- 统一 SQL 调用方式
+- 部署脚本、功能测试、性能测试和演示样例
 
-### 系统架构
+### 核心指标
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              用户/应用层                                     │
-│                          (SQL 查询 / API 调用)                               │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         TimescaleDB 兼容层                                   │
-│              (timescaledb_compat.sql - 提供标准 TimescaleDB API)            │
-│                                                                             │
-│   time_bucket() | create_hypertable() | first()/last() | add_retention()   │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       DataNexus 多模态插件层                                 │
-├─────────────┬─────────────┬─────────────┬─────────────┬─────────────────────┤
-│ otb_ts      │ otb_age     │ otb_fulltext│ otb_routing │ otb_scheduler       │
-│ 时序数据    │ 图数据库    │ 全文检索    │ 路网分析    │ 调度管理            │
-│ (81函数)    │ (28函数)    │ (34函数)    │ (10函数)    │ (28函数)            │
-├─────────────┴─────────────┴─────────────┴─────────────┴─────────────────────┤
-│ otb_analytics ⭐原创      │ otb_health ⭐原创       │ otb_snapshot ⭐原创   │
-│ 时序分析算法 (31函数)     │ 数据健康诊断 (9函数)    │ 数据快照 (5函数)      │
-│ SMA/EMA/WMA/DEMA/TEMA     │ 空值/间隙/重复检测      │ 创建/回滚/删除        │
-│ Z-score/IQR异常检测       │ 自动调优建议            │ 版本管理              │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            deploy.sh 部署脚本                                │
-│                                                                             │
-│   • 自动检测源码目录        • 智能配置分布式环境                            │
-│   • 编译安装 C 扩展         • 安装 8 个插件 SQL                             │
-│   • 运行功能测试            • 验证安装结果                                  │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        OpenTenBase 分布式集群                                │
-│                                                                             │
-│    ┌──────────────┐              ┌──────────────┐                          │
-│    │     CN       │              │     GTM      │                          │
-│    │ Coordinator  │◀────────────▶│  全局事务    │                          │
-│    └──────────────┘              └──────────────┘                          │
-│           │                                                                 │
-│     ┌─────┴─────┬─────────────┐                                            │
-│     ▼           ▼             ▼                                            │
-│  ┌──────┐   ┌──────┐     ┌──────┐                                          │
-│  │ DN1  │   │ DN2  │     │ DN3  │                                          │
-│  │数据节点│   │数据节点│     │数据节点│                                          │
-│  └──────┘   └──────┘     └──────┘                                          │
-│                                                                             │
-│              DISTRIBUTE BY REPLICATION                                      │
-│               (数据全量复制到所有DN)                                         │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+| 指标 | 数值 | 说明 |
+| --- | --- | --- |
+| 适配插件 | 5 个 | TimescaleDB、AGE、Fulltext、Routing、Scheduler |
+| 原创插件 | 3 个 | `otb_analytics`、`otb_health`、`otb_snapshot` |
+| 数据模态 | 9 种 | 关系 / 时序 / 图 / 地理 / 向量 / 全文 / 路网 / JSON / 调度 |
+| 功能对象 | 292 个 | 函数、聚合、视图、类型、表等 |
+| 测试用例 | 160 项 | 功能测试 110 项 + 性能测试 50 项 |
+| 性能提升 | 最高 1284 倍 | GIN 全文检索测试场景 |
+
+### 插件组成
+
+| 模块 | 类型 | 作用 |
+| --- | --- | --- |
+| `otb_timeseries` | 兼容层 | 时序数据管理，TimescaleDB 风格接口 |
+| `otb_age` | 兼容层 | 图数据与 Cypher 风格查询 |
+| `otb_fulltext` | 兼容层 | 中文全文检索、分词、匹配 |
+| `otb_routing` | 兼容层 | 路网分析与路径计算 |
+| `otb_scheduler` | 兼容层 | 调度管理与分区任务 |
+| `otb_analytics` | 原创 | 移动平均、异常检测、速率等分析能力 |
+| `otb_health` | 原创 | 数据健康诊断与调优建议 |
+| `otb_snapshot` | 原创 | 快照创建、列表、回滚 |
+
+### 第一眼上手路径
+
+1. 准备 OpenTenBase 环境
+2. 运行 `scripts/deploy.sh`
+3. 先执行 `examples/demo_multimodal.sql`
+4. 再根据需要查看 `tests/` 和 `docs/`
+
+### 架构简述
+
+- OpenTenBase 提供分布式数据库底座
+- `deploy.sh` 负责安装 SQL 模块和 C 扩展
+- `src/` 下的 8 个模块提供多模态能力
+- 上层通过统一 SQL 接口调用这些能力
+
+如果你想看更细的能力说明、函数表和技术实现，直接跳到：
+- [相关文档](#-相关文档)
+- [插件一览](#-插件一览)
 
 ---
 
